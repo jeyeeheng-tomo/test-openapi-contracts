@@ -30,6 +30,45 @@ jobs:
           name: bundled-specs
           path: dist/specs/
 
+  kotlin-models:
+    # The generated Kotlin is committed. Regenerate and fail if it is stale,
+    # so a contract PR always carries the model diff it causes.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Cache the Fabrikt jar
+        uses: actions/cache@v4
+        with:
+          path: .fabrikt
+          key: fabrikt-${{ hashFiles('codegen.json') }}
+
+      - run: npm ci
+      - run: npm run bundle
+      - run: npm run generate:kotlin
+
+      - name: Check the committed models are up to date
+        run: |
+          if ! git diff --quiet -- generated/; then
+            echo "::error::generated/ is out of date. Run 'npm run check' and commit the result."
+            echo ""
+            echo "Diff between the committed models and what the specs produce:"
+            git --no-pager diff --stat -- generated/
+            git --no-pager diff -- generated/
+            exit 1
+          fi
+          echo "Generated models match the specs."
+
   breaking-changes:
     # Informational: flags backwards-incompatible changes vs. the base branch.
     runs-on: ubuntu-latest

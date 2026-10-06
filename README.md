@@ -12,7 +12,10 @@ specs/
   shared/components.yaml   # errors, pagination params, auth scheme — reused by every service
   users/openapi.yaml       # Users API
   orders/openapi.yaml      # Orders API
+generated/kotlin/          # Fabrikt-generated Kotlin models (committed, DO NOT EDIT)
 scripts/build-site.mjs     # bundles specs + generates the Swagger UI page
+scripts/generate-kotlin.mjs # runs Fabrikt over the bundled specs
+codegen.json               # Fabrikt version + generation settings
 redocly.yaml               # lint rules
 ```
 
@@ -25,9 +28,37 @@ bundled, and shows up in the Swagger UI service picker. There is no registry to 
 npm install
 npm run lint      # validate specs against the lint rules
 npm run bundle    # resolve $refs into dist/specs/*.yaml and build dist/index.html
+npm run generate:kotlin  # regenerate the Kotlin models from the bundled specs
 npm run preview   # build, then serve the docs at http://localhost:8080
-npm run check     # lint + bundle — what CI runs
+npm run check     # lint + bundle + generate — what CI runs
 ```
+
+Codegen needs a JDK (17+) on your PATH. The Fabrikt jar is downloaded on first
+use into `.fabrikt/`, checksum-verified against Maven Central, and cached.
+
+## Generated Kotlin models
+
+`generated/kotlin/` holds Jackson data classes with `jakarta.validation`
+annotations, produced by [Fabrikt](https://github.com/cjbooms/fabrikt) from the
+bundled specs. One package per service: `com.example.contracts.<service>.models`.
+
+**The output is committed on purpose.** A contract PR then shows the exact Kotlin
+diff it causes, which is the thing backend reviewers actually care about:
+
+```diff
+  specs/orders/openapi.yaml
++   refund_reason: { type: string }
+
+  generated/kotlin/.../Order.kt
++   @get:JsonProperty("refund_reason")
++   public val refundReason: String? = null
+```
+
+CI regenerates on every PR and **fails if the committed models are stale**. If the
+`kotlin-models` check is red, run `npm run check` and commit the result.
+
+Never hand-edit anything under `generated/`. Change the contract, or the settings
+in `codegen.json` (Fabrikt version, base package, targets, validation library).
 
 ## Adding a service
 

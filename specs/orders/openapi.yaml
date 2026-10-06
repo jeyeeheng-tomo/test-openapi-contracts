@@ -189,27 +189,29 @@ components:
           $ref: '#/components/schemas/Money'
 
     Order:
-      type: object
-      required: [id, user_id, status, items, total, created_at, updated_at]
-      properties:
-        id:
-          type: string
-          format: uuid
-        user_id:
-          type: string
-          format: uuid
-          description: References `User.id` in the Users API.
-        status:
-          $ref: '#/components/schemas/OrderStatus'
-        items:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/OrderItem'
-        total:
-          $ref: '#/components/schemas/Money'
+      # Everything lives inside allOf: Fabrikt rejects `properties` and a
+      # combiner at the same level. See CONTRIBUTING.md.
       allOf:
         - $ref: '../shared/components.yaml#/components/schemas/Timestamps'
+        - type: object
+          required: [id, user_id, status, items, total]
+          properties:
+            id:
+              type: string
+              format: uuid
+            user_id:
+              type: string
+              format: uuid
+              description: References `User.id` in the Users API.
+            status:
+              $ref: '#/components/schemas/OrderStatus'
+            items:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/OrderItem'
+            total:
+              $ref: '#/components/schemas/Money'
 
     CreateOrderRequest:
       type: object

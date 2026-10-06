@@ -4,7 +4,9 @@
 
 1. Branch off `main`: `git checkout -b contract/orders-add-refunds`
 2. Edit the spec(s) under `specs/`.
-3. `npm run check` — fix anything it complains about.
+3. `npm run check` — this lints, bundles, **and regenerates the Kotlin models**.
+   Commit the `generated/` changes along with the spec change; CI fails if they
+   drift apart.
 4. Open a PR using the template. Say who consumes the change.
 5. CODEOWNERS pulls in the owning team and the API reviewers. Needs one approval
    from each.
@@ -25,6 +27,34 @@ backend team's approval before merge.
   with which `code`?
 - **Is it reusing `specs/shared/components.yaml`?** A redefined `Error` schema
   is a review comment.
+
+## Schema rules the generator imposes
+
+Fabrikt is stricter than the OpenAPI spec. The one that bites:
+
+> `'User' schema contains an invalid combination of properties and
+> `oneOf | anyOf | allOf`. Do not use properties and a combiner at the same level.`
+
+Valid OpenAPI, rejected by Fabrikt. Put everything inside the `allOf`:
+
+```yaml
+# Won't generate
+User:
+  type: object
+  properties: { id: { type: string } }
+  allOf:
+    - $ref: '../shared/components.yaml#/components/schemas/Timestamps'
+
+# Will generate
+User:
+  allOf:
+    - $ref: '../shared/components.yaml#/components/schemas/Timestamps'
+    - type: object
+      properties: { id: { type: string } }
+```
+
+`npm run generate:kotlin` prints this hint when it hits the case. Redocly lint
+will *not* catch it — only the codegen step does.
 
 ## Breaking changes
 

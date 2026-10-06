@@ -1,0 +1,12 @@
+{
+  "fabriktVersion": "23.0.0",
+  "defaults": {
+    "basePackagePrefix": "com.example.contracts",
+    "targets": ["HTTP_MODELS"],
+    "validationLibrary": "JAKARTA_VALIDATION",
+    "serializationLibrary": "JACKSON",
+    "typeOverrides": ["DATETIME_AS_INSTANT"],
+    "modelOptions": []
+  },
+  "services": {}
+}

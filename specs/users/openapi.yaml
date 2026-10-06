@@ -146,27 +146,29 @@ components:
 
   schemas:
     User:
-      type: object
-      required: [id, email, display_name, status, created_at, updated_at]
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 018f3b2c-9b10-7c3a-9f2e-1a2b3c4d5e6f
-        email:
-          type: string
-          format: email
-          example: ada@example.com
-        display_name:
-          type: string
-          maxLength: 120
-          example: Ada Lovelace
-        status:
-          type: string
-          enum: [active, suspended, deactivated]
-          example: active
+      # Everything lives inside allOf: Fabrikt rejects `properties` and a
+      # combiner at the same level. See CONTRIBUTING.md.
       allOf:
         - $ref: '../shared/components.yaml#/components/schemas/Timestamps'
+        - type: object
+          required: [id, email, display_name, status]
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 018f3b2c-9b10-7c3a-9f2e-1a2b3c4d5e6f
+            email:
+              type: string
+              format: email
+              example: ada@example.com
+            display_name:
+              type: string
+              maxLength: 120
+              example: Ada Lovelace
+            status:
+              type: string
+              enum: [active, suspended, deactivated]
+              example: active
 
     CreateUserRequest:
       type: object
