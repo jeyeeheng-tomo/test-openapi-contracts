@@ -1,0 +1,9 @@
+# Every contract change needs a review from the API review group.
+*                           @your-org/api-reviewers
+
+# Owning teams additionally review their own service.
+/specs/users/               @your-org/platform-team
+/specs/orders/              @your-org/commerce-team
+
+# Shared components affect everyone.
+/specs/shared/              @your-org/api-reviewers

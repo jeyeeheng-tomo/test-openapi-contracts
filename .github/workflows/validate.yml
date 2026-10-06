@@ -1,0 +1,69 @@
+name: Validate contracts
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint specs
+        run: npm run lint
+
+      - name: Bundle specs (must resolve cleanly)
+        run: npm run bundle
+
+      - name: Upload bundled specs
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundled-specs
+          path: dist/specs/
+
+  breaking-changes:
+    # Informational: flags backwards-incompatible changes vs. the base branch.
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Diff each spec against the base branch
+        run: |
+          set -euo pipefail
+          base="origin/${{ github.base_ref }}"
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          failed=0
+          for spec in specs/*/openapi.yaml; do
+            if ! git cat-file -e "$base:$spec" 2>/dev/null; then
+              echo "::notice file=$spec::new spec, nothing to diff"
+              continue
+            fi
+            mkdir -p "/tmp/base/$(dirname "$spec")"
+            git show "$base:$spec" > "/tmp/base/$spec"
+            # Shared components are referenced relatively; copy the base copy too.
+            mkdir -p /tmp/base/specs/shared
+            git show "$base:specs/shared/components.yaml" > /tmp/base/specs/shared/components.yaml 2>/dev/null || true
+            echo "::group::$spec"
+            npx --yes oasdiff@latest breaking "/tmp/base/$spec" "$spec" --fail-on ERR || failed=1
+            echo "::endgroup::"
+          done
+          if [ "$failed" -ne 0 ]; then
+            echo "::warning::Breaking changes detected. Bump the major version or add a new path, or get sign-off from both consumers and the owning team."
+            exit 1
+          fi

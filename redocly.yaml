@@ -1,0 +1,16 @@
+# Lint rules applied to every spec under specs/*/openapi.yaml.
+# Specs are auto-discovered, so there is nothing to register here when you add one.
+extends:
+  - recommended
+
+rules:
+  # Contract hygiene we enforce on every PR.
+  operation-operationId: error
+  operation-operationId-unique: error
+  operation-summary: error
+  operation-4xx-response: error
+  no-unresolved-refs: error
+  security-defined: error
+  tag-description: warn
+  info-license: off
+  no-server-example.com: off

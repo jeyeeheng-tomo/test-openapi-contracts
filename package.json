@@ -1,0 +1,16 @@
+{
+  "name": "openapi-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Source of truth for our HTTP API contracts",
+  "type": "module",
+  "scripts": {
+    "lint": "redocly lint specs/*/openapi.yaml",
+    "bundle": "node scripts/build-site.mjs",
+    "preview": "npm run bundle && npx --yes http-server dist -p 8080 -c-1",
+    "check": "npm run lint && npm run bundle"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.25.11"
+  }
+}

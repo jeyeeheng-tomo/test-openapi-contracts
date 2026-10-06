@@ -1,0 +1,226 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: 1.0.0
+  description: |
+    Order placement and lookup. Owned by the Commerce team.
+  contact:
+    name: Commerce team
+    email: commerce@example.com
+
+servers:
+  - url: https://api.example.com/orders/v1
+    description: Production
+  - url: https://api.staging.example.com/orders/v1
+    description: Staging
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Orders
+    description: Place, read and cancel orders.
+
+paths:
+  /orders:
+    get:
+      operationId: listOrders
+      summary: List orders
+      tags: [Orders]
+      parameters:
+        - $ref: '../shared/components.yaml#/components/parameters/PageSize'
+        - $ref: '../shared/components.yaml#/components/parameters/PageToken'
+        - name: status
+          in: query
+          required: false
+          description: Filter by order status.
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+      responses:
+        '200':
+          description: A page of orders.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  next_page_token:
+                    type: string
+        '400':
+          $ref: '../shared/components.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: '../shared/components.yaml#/components/responses/Unauthorized'
+
+    post:
+      operationId: createOrder
+      summary: Place an order
+      tags: [Orders]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Client-generated key. Replaying the same key returns the original order.
+          schema:
+            type: string
+            maxLength: 64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: The created order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '../shared/components.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: '../shared/components.yaml#/components/responses/Unauthorized'
+        '409':
+          $ref: '../shared/components.yaml#/components/responses/Conflict'
+
+  /orders/{orderId}:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getOrder
+      summary: Get an order by id
+      tags: [Orders]
+      responses:
+        '200':
+          description: The order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '../shared/components.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../shared/components.yaml#/components/responses/NotFound'
+
+  /orders/{orderId}/cancel:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: cancelOrder
+      summary: Cancel an order
+      description: Only orders in `pending` or `paid` status can be cancelled.
+      tags: [Orders]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 280
+      responses:
+        '200':
+          description: The cancelled order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '../shared/components.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: '../shared/components.yaml#/components/responses/NotFound'
+        '409':
+          $ref: '../shared/components.yaml#/components/responses/Conflict'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: '../shared/components.yaml#/components/securitySchemes/bearerAuth'
+
+  schemas:
+    OrderStatus:
+      type: string
+      enum: [pending, paid, shipped, cancelled]
+
+    Money:
+      type: object
+      required: [amount_minor, currency]
+      properties:
+        amount_minor:
+          type: integer
+          format: int64
+          description: Amount in the currency's minor unit (e.g. cents). Never a float.
+          example: 1299
+        currency:
+          type: string
+          description: ISO 4217 code.
+          pattern: '^[A-Z]{3}$'
+          example: SGD
+
+    OrderItem:
+      type: object
+      required: [sku, quantity, unit_price]
+      properties:
+        sku:
+          type: string
+          example: TSHIRT-BLK-M
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+        unit_price:
+          $ref: '#/components/schemas/Money'
+
+    Order:
+      type: object
+      required: [id, user_id, status, items, total, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+          description: References `User.id` in the Users API.
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        total:
+          $ref: '#/components/schemas/Money'
+      allOf:
+        - $ref: '../shared/components.yaml#/components/schemas/Timestamps'
+
+    CreateOrderRequest:
+      type: object
+      required: [user_id, items]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderItem'
+      additionalProperties: false
