@@ -8,8 +8,10 @@
     "lint": "redocly lint specs/*/openapi.yaml",
     "bundle": "node scripts/build-site.mjs",
     "preview": "npm run bundle && npx --yes http-server dist -p 8080 -c-1",
-    "check": "npm run lint && npm run bundle && npm run generate:kotlin",
-    "generate:kotlin": "node scripts/generate-kotlin.mjs"
+    "check": "npm run lint && npm run bundle && npm run generate",
+    "generate:kotlin": "node scripts/generate-kotlin.mjs",
+    "generate:dart": "node scripts/generate-dart.mjs",
+    "generate": "npm run generate:kotlin && npm run generate:dart"
   },
   "devDependencies": {
     "@redocly/cli": "^1.25.11"

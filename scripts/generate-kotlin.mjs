@@ -12,7 +12,7 @@ const BUNDLED_DIR = join('dist', 'specs');
 const OUT_DIR = join('generated', 'kotlin');
 const CACHE_DIR = '.fabrikt';
 
-const config = JSON.parse(readFileSync('codegen.json', 'utf8'));
+const config = JSON.parse(readFileSync('codegen.json', 'utf8')).kotlin;
 const { fabriktVersion, defaults, services: overrides } = config;
 
 // --- Fetch and cache the Fabrikt jar, verifying its published checksum -------
@@ -98,22 +98,6 @@ for (const file of specs) {
     process.exit(1);
   }
 }
-
-writeFileSync(
-  join('generated', 'README.md'),
-  [
-    '# Generated code — do not edit',
-    '',
-    'Everything under this directory is produced by `npm run generate:kotlin`',
-    'from the specs in `specs/`. Hand edits are overwritten and CI will fail.',
-    '',
-    'To change the output, change the contract in `specs/`, or the generator',
-    'settings in `codegen.json`, and regenerate.',
-    '',
-    `Generator: Fabrikt ${fabriktVersion}`,
-    '',
-  ].join('\n'),
-);
 
 const count = execFileSync('find', [OUT_DIR, '-name', '*.kt', '-type', 'f']).toString().trim().split('\n').filter(Boolean).length;
 console.log(`\nwrote ${count} Kotlin file(s) to ${OUT_DIR}`);

@@ -1,12 +1,36 @@
 {
-  "fabriktVersion": "23.0.0",
-  "defaults": {
-    "basePackagePrefix": "com.example.contracts",
-    "targets": ["HTTP_MODELS"],
-    "validationLibrary": "JAKARTA_VALIDATION",
-    "serializationLibrary": "JACKSON",
-    "typeOverrides": ["DATETIME_AS_INSTANT"],
-    "modelOptions": []
+  "kotlin": {
+    "fabriktVersion": "23.0.0",
+    "defaults": {
+      "basePackagePrefix": "com.example.contracts",
+      "targets": [
+        "HTTP_MODELS"
+      ],
+      "validationLibrary": "JAKARTA_VALIDATION",
+      "serializationLibrary": "JACKSON",
+      "typeOverrides": [
+        "DATETIME_AS_INSTANT"
+      ],
+      "modelOptions": []
+    },
+    "services": {}
   },
-  "services": {}
+  "dart": {
+    "kiotaVersion": "1.35.0",
+    "kiotaChecksums": {
+      "darwin-arm64": "bd50a566dbcd2bd10f4ef4a919276dd193202dced990fb5d16d83b68030e2063",
+      "darwin-x64": "67fa0dd2a2d783ba52b504e115b2af029780aef3894617e303c1405a819d9450",
+      "linux-x64": "8ca042683665f48cc6df1cbe6ff2c850d18f74ad0a1035a406eb486e192f50bc",
+      "linux-arm64": "c542ef1b71c24912a002be87eab7cbfefea324b14eb353162a4b55b879e6925c"
+    },
+    "packageName": "api_contracts",
+    "packageVersion": "0.0.1",
+    "sdkConstraint": "^3.5.0",
+    "dependencies": {
+      "microsoft_kiota_abstractions": "^0.3.0",
+      "microsoft_kiota_bundle": "^0.1.1",
+      "uuid": "^4.0.0"
+    },
+    "services": {}
+  }
 }

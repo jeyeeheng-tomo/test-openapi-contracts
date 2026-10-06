@@ -4,9 +4,9 @@
 
 1. Branch off `main`: `git checkout -b contract/orders-add-refunds`
 2. Edit the spec(s) under `specs/`.
-3. `npm run check` — this lints, bundles, **and regenerates the Kotlin models**.
-   Commit the `generated/` changes along with the spec change; CI fails if they
-   drift apart.
+3. `npm run check` — this lints, bundles, **and regenerates both the Kotlin
+   models and the Dart clients**. Commit the `generated/` changes along with the
+   spec change; CI fails if they drift apart.
 4. Open a PR using the template. Say who consumes the change.
 5. CODEOWNERS pulls in the owning team and the API reviewers. Needs one approval
    from each.
@@ -55,6 +55,10 @@ User:
 
 `npm run generate:kotlin` prints this hint when it hits the case. Redocly lint
 will *not* catch it — only the codegen step does.
+
+Kiota is more permissive but quieter about it: unsupported `format` values
+(`email`, and others) silently degrade to `String`, and it only ever uses the
+first `servers:` entry. It prints warnings during generation — read them.
 
 ## Breaking changes
 

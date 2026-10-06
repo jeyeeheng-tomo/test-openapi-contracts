@@ -3,3 +3,6 @@ dist/
 *.log
 .DS_Store
 .fabrikt/
+.kiota/
+.dart_tool/
+generated/dart/pubspec.lock

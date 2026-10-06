@@ -11,7 +11,7 @@
 ## Checklist
 
 - [ ] `npm run check` passes locally
-- [ ] Regenerated `generated/` is committed alongside the spec change
+- [ ] Regenerated `generated/` (Kotlin **and** Dart) is committed alongside the spec change
 - [ ] Every new operation has an `operationId`, a `summary`, and at least one 4xx response
 - [ ] Examples are realistic (no `string` / `foo`)
 - [ ] Breaking changes: version bumped and consumers notified

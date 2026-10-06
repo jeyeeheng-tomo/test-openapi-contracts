@@ -69,6 +69,49 @@ jobs:
           fi
           echo "Generated models match the specs."
 
+  dart-clients:
+    # Same contract as kotlin-models: the generated Dart is committed, so
+    # regenerate and fail if it drifts. Also check it still compiles.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Cache the Kiota binary
+        uses: actions/cache@v4
+        with:
+          path: .kiota
+          key: kiota-${{ hashFiles('codegen.json') }}
+
+      - run: npm ci
+      - run: npm run bundle
+      - run: npm run generate:dart
+
+      - name: Check the committed clients are up to date
+        run: |
+          if ! git diff --quiet -- generated/dart/; then
+            echo "::error::generated/dart/ is out of date. Run 'npm run check' and commit the result."
+            echo ""
+            git --no-pager diff --stat -- generated/dart/
+            git --no-pager diff -- generated/dart/
+            exit 1
+          fi
+          echo "Generated Dart clients match the specs."
+
+      - name: Analyze the generated Dart
+        working-directory: generated/dart
+        run: |
+          dart pub get
+          dart analyze
+
   breaking-changes:
     # Informational: flags backwards-incompatible changes vs. the base branch.
     runs-on: ubuntu-latest
