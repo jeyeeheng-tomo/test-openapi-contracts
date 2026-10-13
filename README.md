@@ -10,19 +10,25 @@ agree on the contract **here, in a PR**, before either side writes code.
 ```
 specs/
   shared/components.yaml   # errors, pagination params, auth scheme — reused by every service
-  users/openapi.yaml       # Users API
-  orders/openapi.yaml      # Orders API
+  offers/
+    openapi.yaml           # Offers API — metadata + $refs into paths/ and components/
+    paths/                 # one file per path item
+    components/            # offers-specific schemas and parameters
 generated/kotlin/          # Fabrikt-generated Kotlin models (committed, DO NOT EDIT)
-generated/dart/            # Kiota-generated Dart clients  (committed, DO NOT EDIT)
+generated/dart/            # OpenAPI Generator Dart clients (committed, DO NOT EDIT)
 scripts/build-site.mjs     # bundles specs + generates the Swagger UI page
 scripts/generate-kotlin.mjs # runs Fabrikt over the bundled specs
-scripts/generate-dart.mjs   # runs Kiota over the bundled specs
+scripts/generate-dart.mjs   # runs openapi-generator + build_runner over the bundled specs
 codegen.json               # generator versions + settings
 redocly.yaml               # lint rules
 ```
 
 Specs are auto-discovered: anything at `specs/<service>/openapi.yaml` is linted,
 bundled, and shows up in the Swagger UI service picker. There is no registry to update.
+
+`openapi.yaml` is the only file a service *needs* — refs are inlined at bundle time, so how
+you split the rest is up to you. See [CONTRIBUTING.md](CONTRIBUTING.md#how-a-service-spec-is-laid-out)
+for the layout and the ref rules that go with it.
 
 ## Working locally
 
@@ -37,10 +43,12 @@ npm run check     # lint + bundle + generate — what CI runs
 
 `generate:kotlin` and `generate:dart` run one generator each.
 
-Codegen needs a **JDK 17+** (Kotlin) and the **Dart SDK** (to analyze the Dart
-output) on your PATH. The generator binaries are downloaded on first use into
-`.fabrikt/` and `.kiota/`, checksum-verified, and cached. You only need the
-toolchain for the language you are changing — CI checks both regardless.
+Codegen needs **JDK 17+** (both generators are Java tools) and **Dart 3.8+**
+(`build_runner` produces the `.g.dart` serializers, and `dart analyze` checks the
+result) on your PATH. Fabrikt is downloaded on first use into `.fabrikt/` and
+SHA-1 verified; the OpenAPI Generator jar is pinned in `codegen.json` and installed
+via `npm ci`. You only need the toolchain for the language you are changing — CI
+checks both regardless.
 
 ## Generated Kotlin models
 
@@ -52,12 +60,12 @@ bundled specs. One package per service: `com.example.contracts.<service>.models`
 diff it causes, which is the thing backend reviewers actually care about:
 
 ```diff
-  specs/orders/openapi.yaml
-+   refund_reason: { type: string }
+  specs/offers/openapi.yaml
++   terms_url: { type: string }
 
-  generated/kotlin/.../Order.kt
-+   @get:JsonProperty("refund_reason")
-+   public val refundReason: String? = null
+  generated/kotlin/.../Offer.kt
++   @get:JsonProperty("terms_url")
++   public val termsUrl: String? = null
 ```
 
 CI regenerates on every PR and **fails if the committed models are stale**. If the
@@ -68,16 +76,42 @@ in `codegen.json` (Fabrikt version, base package, targets, validation library).
 
 ## Generated Dart clients
 
-`generated/dart/` is a single Dart package, `api_contracts`, holding a full
-[Kiota](https://github.com/microsoft/kiota) client per service — request
-builders, models and serialization, not just models.
+`generated/dart/` is a single Dart package, `api_contracts`, holding a
+[Dio](https://pub.dev/packages/dio) client per service plus
+[`json_serializable`](https://pub.dev/packages/json_serializable) models, produced by
+[OpenAPI Generator](https://openapi-generator.tech/)'s `dart-dio` generator. One
+barrel file per service: `package:api_contracts/<service>.dart`.
 
 ```dart
-import 'package:api_contracts/orders/orders_api_client.dart';
+import 'package:api_contracts/offers.dart';
 
-final client = OrdersApiClient(requestAdapter);
-final order  = await client.orders.byOrderId('018f…').getAsync();
+final client = OffersApiClient();                            // or pass your own Dio
+final api    = OffersApi(client.dio);
+final page   = (await api.listOffers(pageSize: 20)).data;    // OfferPage
+final offer  = (await api.getOffer(offerId: '018f…')).data;  // Offer
 ```
+
+Models come out as plain immutable classes — `final` fields, `required` named
+constructor params, `@JsonKey(name:)` for the wire name, and `fromJson`/`toJson`:
+
+```dart
+@JsonSerializable(checked: true, createToJson: true, explicitToJson: true)
+class Offer {
+  Offer({required this.id, required this.title, required this.description});
+
+  @JsonKey(name: r'id', required: true, includeIfNull: false)
+  final String id;
+  ...
+  factory Offer.fromJson(Map<String, dynamic> json) => _$OfferFromJson(json);
+}
+```
+
+Fields that the contract marks `required` are non-nullable; everything else is
+nullable. Enums get a `unknownDefaultOpenApi` member and
+`@JsonKey(unknownEnumValue:)`, so a value added by the server does not break an
+older client at parse time.
+
+Requires **Dart 3.8+** — `json_serializable` emits null-aware elements.
 
 Consume it from a Flutter app as a git dependency:
 
@@ -94,20 +128,18 @@ PR, fails if `generated/dart/` is stale, and then runs `dart analyze` over it.
 
 **Caveats worth knowing before you build on this:**
 
-- Kiota's Dart generator is **Experimental** and community-supported, not
-  Microsoft-supported. The project warns that source-breaking changes will
-  happen between versions. The version is pinned in `codegen.json` for that
-  reason — bump it deliberately.
-- **Every generated field is nullable**, including ones the contract marks
-  `required`. The Dart generator does not carry `required` through, so you get
-  `String?` where Kotlin gets a non-null `String`. Null-check at the boundary.
+- The `json_serializable` mode of the `dart-dio` generator is marked **BETA**
+  upstream. The generator version is pinned in `codegen.json` for that reason —
+  bump it deliberately and read the Dart diff.
+- The entrypoint class is named after `pubName`, which is the same for every
+  service, so `generate-dart.mjs` renames it per service to `<Service>ApiClient`.
+  Without that, two services would both export `ApiContracts` and collide.
+- Only the **first** `servers:` entry becomes `basePath`. Pass `basePathOverride`
+  to `<Service>ApiClient` to point at staging.
 - `format: email` (and other unsupported formats) degrade to plain `String`.
-  Kiota prints a warning per occurrence during generation.
-- Only the **first** `servers:` entry becomes the client base URL. Point the
-  request adapter elsewhere for staging.
-- GitHub publishes no checksums for Kiota release assets, so the SHA-256 of each
-  platform binary is pinned in `codegen.json`. When bumping the version, run
-  `./scripts/pin-kiota-checksums.sh <version>` and paste the result in.
+- Generator output is run through `dart format`, so the committed diff stays
+  stable. The CI job pins an exact Dart SDK for the same reason — a formatter
+  change between SDK releases would otherwise look like stale output.
 
 ## Adding a service
 
@@ -124,7 +156,7 @@ PR, fails if `generated/dart/` is stale, and then runs `dart analyze` over it.
 ## Conventions
 
 - `snake_case` for JSON properties, `camelCase` for `operationId` and path params.
-- Plural, lowercase resource paths: `/orders/{orderId}/cancel`.
+- Plural, lowercase resource paths: `/offers/{offerId}/redeem`.
 - Money is always `{ amount_minor: int64, currency: "SGD" }` — never a float.
 - Cursor pagination: `page_size` + `page_token` in, `next_page_token` out.
 - Every error response uses the shared `Error` schema with a stable `code`.
@@ -133,7 +165,7 @@ PR, fails if `generated/dart/` is stale, and then runs `dart analyze` over it.
 
 ## Versioning
 
-The version lives in the path (`/users/v1`) and in `info.version`.
+The version lives in the path (`/offers/v1`) and in `info.version`.
 
 - **Additive** changes (new endpoint, new optional field) ship in place.
 - **Breaking** changes (removing/renaming a field, making a field required,

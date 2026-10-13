@@ -2,8 +2,7 @@
 *                           @your-org/api-reviewers
 
 # Owning teams additionally review their own service.
-/specs/users/               @your-org/platform-team
-/specs/orders/              @your-org/commerce-team
+/specs/offers/              @your-org/loyalty-team
 
 # Shared components affect everyone.
 /specs/shared/              @your-org/api-reviewers

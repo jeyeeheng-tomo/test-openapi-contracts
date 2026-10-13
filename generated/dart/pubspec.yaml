@@ -5,9 +5,12 @@ version: 0.0.1
 publish_to: none
 
 environment:
-  sdk: '^3.5.0'
+  sdk: '^3.8.0'
 
 dependencies:
-  microsoft_kiota_abstractions: ^0.3.0
-  microsoft_kiota_bundle: ^0.1.1
-  uuid: ^4.0.0
+  dio: ^5.7.0
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  build_runner: ^2.4.13
+  json_serializable: ^6.9.0

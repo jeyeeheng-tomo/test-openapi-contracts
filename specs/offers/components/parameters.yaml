@@ -1,0 +1,10 @@
+# Path and query parameters specific to the Offers API. Parameters shared with
+# every other service (page_size, page_token) live in ../../shared/components.yaml.
+OfferId:
+  name: offerId
+  in: path
+  required: true
+  description: Opaque offer identifier (UUID v7).
+  schema:
+    type: string
+    format: uuid

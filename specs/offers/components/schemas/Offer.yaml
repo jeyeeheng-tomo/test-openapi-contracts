@@ -1,0 +1,18 @@
+type: object
+required: [id, title, description]
+properties:
+  id:
+    type: string
+    format: uuid
+    description: Opaque offer identifier (UUID v7).
+    example: 018f3b2c-9b10-7c3a-9f2e-1a2b3c4d5e6f
+  title:
+    type: string
+    maxLength: 120
+    description: Short headline shown in the offer list.
+    example: 10% off your next coffee
+  description:
+    type: string
+    maxLength: 1000
+    description: Longer copy explaining the offer.
+    example: Valid at any participating outlet until 31 Dec. One redemption per member.

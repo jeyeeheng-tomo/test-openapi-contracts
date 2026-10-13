@@ -1,0 +1,43 @@
+openapi: 3.0.3
+info:
+  title: Offers API
+  version: 1.0.0
+  description: |
+    Promotional offers available to a member. Owned by the Loyalty team.
+
+    Contract changes go through a PR in this repo; the implementation follows the
+    merged contract, not the other way around.
+  contact:
+    name: Loyalty team
+    email: loyalty@example.com
+
+servers:
+  - url: https://api.example.com/offers/v1
+    description: Production
+  - url: https://api.staging.example.com/offers/v1
+    description: Staging
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Offers
+    description: Browse the offers available to the caller.
+
+paths:
+  # One file per path item, under paths/. Refs there are relative to that file.
+  /offers:
+    $ref: './paths/offers.yaml'
+  /offers/{offerId}:
+    $ref: './paths/offers-by-id.yaml'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: '../shared/components.yaml#/components/securitySchemes/bearerAuth'
+
+  # Offers-specific parameters and schemas live under components/. They are pulled
+  # into the bundle by the paths/ files that reference them, and each bundled
+  # component takes its name from the FILE NAME -- components/schemas/Offer.yaml
+  # becomes `Offer`, which is the generated Kotlin/Dart class name. Do not also
+  # alias them here: that emits a duplicate schema into the bundle.

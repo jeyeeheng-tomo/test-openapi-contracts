@@ -1,0 +1,18 @@
+# Path item for /offers/{offerId}. See paths/offers.yaml for the $ref rules.
+parameters:
+  - $ref: '../components/parameters.yaml#/OfferId'
+get:
+  operationId: getOffer
+  summary: Get an offer by id
+  tags: [Offers]
+  responses:
+    '200':
+      description: The offer.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Offer.yaml'
+    '401':
+      $ref: '../../shared/components.yaml#/components/responses/Unauthorized'
+    '404':
+      $ref: '../../shared/components.yaml#/components/responses/NotFound'

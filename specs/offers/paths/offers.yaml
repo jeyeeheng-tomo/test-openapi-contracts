@@ -1,0 +1,21 @@
+# Path item for /offers. Refs resolve relative to THIS file:
+#   ../components/...        offers-specific components
+#   ../../shared/components  components shared by every service
+get:
+  operationId: listOffers
+  summary: List offers
+  tags: [Offers]
+  parameters:
+    - $ref: '../../shared/components.yaml#/components/parameters/PageSize'
+    - $ref: '../../shared/components.yaml#/components/parameters/PageToken'
+  responses:
+    '200':
+      description: A page of offers.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/OfferPage.yaml'
+    '400':
+      $ref: '../../shared/components.yaml#/components/responses/BadRequest'
+    '401':
+      $ref: '../../shared/components.yaml#/components/responses/Unauthorized'

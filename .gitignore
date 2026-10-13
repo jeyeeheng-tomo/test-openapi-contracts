@@ -3,6 +3,11 @@ dist/
 *.log
 .DS_Store
 .fabrikt/
-.kiota/
+.openapi-generator/
+# Written by openapi-generator-cli on each run; the pinned version lives in codegen.json.
+openapitools.json
 .dart_tool/
 generated/dart/pubspec.lock
+generated/dart/.dart_tool/
+generated/dart/.openapi-generator/
+generated/dart/.openapi-generator-ignore

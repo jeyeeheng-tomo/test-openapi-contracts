@@ -81,15 +81,23 @@ jobs:
           node-version: 20
           cache: npm
 
+      # Pinned, not `stable`: `dart format` output can change between SDK
+      # releases, which would make the staleness check below fail spuriously.
       - uses: dart-lang/setup-dart@v1
         with:
-          sdk: stable
+          sdk: 3.11.5
 
-      - name: Cache the Kiota binary
+      # openapi-generator is a Java tool; build_runner needs the Dart SDK above.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Cache the OpenAPI Generator jar
         uses: actions/cache@v4
         with:
-          path: .kiota
-          key: kiota-${{ hashFiles('codegen.json') }}
+          path: node_modules/@openapitools/openapi-generator-cli/versions
+          key: openapi-generator-${{ hashFiles('codegen.json') }}
 
       - run: npm ci
       - run: npm run bundle
@@ -108,9 +116,7 @@ jobs:
 
       - name: Analyze the generated Dart
         working-directory: generated/dart
-        run: |
-          dart pub get
-          dart analyze
+        run: dart analyze
 
   breaking-changes:
     # Informational: flags backwards-incompatible changes vs. the base branch.
@@ -129,18 +135,18 @@ jobs:
         run: |
           set -euo pipefail
           base="origin/${{ github.base_ref }}"
-          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          git fetch --no-tags origin "${{ github.base_ref }}"
+          # Materialise the WHOLE specs/ tree at the base commit. A spec may be
+          # split across paths/ and components/ files, so reconstructing it one
+          # file at a time leaves those relative $refs dangling.
+          rm -rf /tmp/base && mkdir -p /tmp/base
+          git archive "$base" specs | tar -x -C /tmp/base
           failed=0
           for spec in specs/*/openapi.yaml; do
-            if ! git cat-file -e "$base:$spec" 2>/dev/null; then
+            if [ ! -f "/tmp/base/$spec" ]; then
               echo "::notice file=$spec::new spec, nothing to diff"
               continue
             fi
-            mkdir -p "/tmp/base/$(dirname "$spec")"
-            git show "$base:$spec" > "/tmp/base/$spec"
-            # Shared components are referenced relatively; copy the base copy too.
-            mkdir -p /tmp/base/specs/shared
-            git show "$base:specs/shared/components.yaml" > /tmp/base/specs/shared/components.yaml 2>/dev/null || true
             echo "::group::$spec"
             npx --yes oasdiff@latest breaking "/tmp/base/$spec" "$spec" --fail-on ERR || failed=1
             echo "::endgroup::"
