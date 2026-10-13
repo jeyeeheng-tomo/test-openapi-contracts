@@ -1,0 +1,26 @@
+type: object
+required: [id, name, description, expires_at]
+properties:
+  id:
+    type: string
+    format: uuid
+    description: Opaque voucher identifier (UUID v7).
+    example: 018f7a41-2c88-7e55-b3d1-9c4e5f6a7b8c
+  name:
+    type: string
+    maxLength: 120
+    description: Short label shown in the voucher list.
+    example: $5 off your next order
+  description:
+    type: string
+    maxLength: 1000
+    description: Longer copy explaining what the voucher is good for.
+    example: Redeemable once at any participating outlet on a minimum spend of $20.
+  expires_at:
+    type: string
+    format: date-time
+    description: |
+      When the voucher stops being redeemable. Always UTC. A voucher is expired
+      when this instant is in the past; the server does not remove expired
+      vouchers from the list.
+    example: '2026-12-31T23:59:59Z'

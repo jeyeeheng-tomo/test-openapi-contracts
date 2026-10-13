@@ -115,9 +115,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      # oasdiff is a Go binary from GitHub releases. It is NOT on npm: the
+      # `oasdiff` npm package is a 0.0.1-security placeholder with no
+      # executable, so `npx oasdiff` fails with "could not determine
+      # executable to run" and takes the whole job down with it.
+      - name: Install oasdiff
+        env:
+          OASDIFF_VERSION: 1.33.0
+        run: |
+          set -euo pipefail
+          asset="oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz"
+          url="https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}"
+          mkdir -p /tmp/oasdiff && cd /tmp/oasdiff
+          curl -sSLf -o "$asset" "$url/$asset"
+          curl -sSLf -o checksums.txt "$url/checksums.txt"
+          grep " $asset\$" checksums.txt | sha256sum -c -
+          tar -xzf "$asset" oasdiff
+          /tmp/oasdiff/oasdiff --version
 
       - name: Diff each spec against the base branch
         run: |
@@ -136,7 +150,7 @@ jobs:
               continue
             fi
             echo "::group::$spec"
-            npx --yes oasdiff@latest breaking "/tmp/base/$spec" "$spec" --fail-on ERR || failed=1
+            /tmp/oasdiff/oasdiff breaking "/tmp/base/$spec" "$spec" --fail-on ERR || failed=1
             echo "::endgroup::"
           done
           if [ "$failed" -ne 0 ]; then

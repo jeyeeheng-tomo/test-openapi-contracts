@@ -1,0 +1,10 @@
+# Path and query parameters specific to the Vouchers API. Parameters shared with
+# every other service (page_size, page_token) live in ../../shared/components.yaml.
+VoucherId:
+  name: voucherId
+  in: path
+  required: true
+  description: Opaque voucher identifier (UUID v7).
+  schema:
+    type: string
+    format: uuid

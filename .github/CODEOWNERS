@@ -3,6 +3,7 @@
 
 # Owning teams additionally review their own service.
 /specs/offers/              @your-org/loyalty-team
+/specs/vouchers/            @your-org/loyalty-team
 
 # Shared components affect everyone.
 /specs/shared/              @your-org/api-reviewers
