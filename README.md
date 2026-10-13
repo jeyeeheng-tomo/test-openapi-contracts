@@ -3,7 +3,10 @@
 The source of truth for our HTTP API contracts. Backend and frontend engineers
 agree on the contract **here, in a PR**, before either side writes code.
 
-📖 **Docs:** https://YOUR-ORG.github.io/YOUR-REPO/ (Swagger UI, rebuilt on every push to `main`)
+📖 **Docs:** <https://jeyeeheng-tomo.github.io/test-openapi-contracts/> — Swagger UI, rebuilt on
+every push to `main`. Pages serves from the `Publish Swagger UI` workflow, not a `gh-pages`
+branch. **This repo is public** so that Pages works on a Free plan; keep the specs free of
+anything that cannot be published.
 
 ## Layout
 
@@ -22,6 +25,12 @@ scripts/generate-dart.mjs   # runs openapi-generator + build_runner over the bun
 codegen.json               # generator versions + settings
 redocly.yaml               # lint rules
 ```
+
+| Pinned in `codegen.json` | Version |
+| --- | --- |
+| Fabrikt (Kotlin models) | 23.0.0 |
+| OpenAPI Generator (`dart-dio`) | 7.26.0 |
+| Dart SDK used by CI | 3.11.5 |
 
 Specs are auto-discovered: anything at `specs/<service>/openapi.yaml` is linted,
 bundled, and shows up in the Swagger UI service picker. There is no registry to update.
@@ -43,6 +52,10 @@ npm run check     # lint + bundle + generate — what CI runs
 
 `generate:kotlin` and `generate:dart` run one generator each.
 
+**You only need `npm run lint` before opening a PR.** CI owns `generated/` — see
+[Generated Kotlin models](#generated-kotlin-models). Running `npm run generate`
+locally is for previewing the code your contract change will produce.
+
 Codegen needs **JDK 17+** (both generators are Java tools) and **Dart 3.8+**
 (`build_runner` produces the `.g.dart` serializers, and `dart analyze` checks the
 result) on your PATH. Fabrikt is downloaded on first use into `.fabrikt/` and
@@ -56,23 +69,13 @@ checks both regardless.
 annotations, produced by [Fabrikt](https://github.com/cjbooms/fabrikt) from the
 bundled specs. One package per service: `com.example.contracts.<service>.models`.
 
-**The output is committed on purpose.** A contract PR then shows the exact Kotlin
-diff it causes, which is the thing backend reviewers actually care about:
+**CI generates and commits this for you.** You do not need to run the generators
+before opening a PR — the `codegen` job regenerates everything on every push to
+`main` and commits the result back as `Regenerate contract code`.
 
-```diff
-  specs/offers/openapi.yaml
-+   terms_url: { type: string }
-
-  generated/kotlin/.../Offer.kt
-+   @get:JsonProperty("terms_url")
-+   public val termsUrl: String? = null
-```
-
-CI regenerates on every PR and **fails if the committed models are stale**. If the
-`kotlin-models` check is red, run `npm run check` and commit the result.
-
-Never hand-edit anything under `generated/`. Change the contract, or the settings
-in `codegen.json` (Fabrikt version, base package, targets, validation library).
+Never hand-edit anything under `generated/`; the next push to `main` overwrites it.
+Change the contract, or the settings in `codegen.json` (Fabrikt version, base
+package, targets, validation library).
 
 ## Generated Dart clients
 
@@ -85,9 +88,12 @@ barrel file per service: `package:api_contracts/<service>.dart`.
 ```dart
 import 'package:api_contracts/offers.dart';
 
-final client = OffersApiClient();                            // or pass your own Dio
+final client = OffersApiClient();                            // or: basePathOverride: stagingUrl
 final api    = OffersApi(client.dio);
+
 final page   = (await api.listOffers(pageSize: 20)).data;    // OfferPage
+for (final offer in page!.data) print(offer.title);          // Offer
+
 final offer  = (await api.getOffer(offerId: '018f…')).data;  // Offer
 ```
 
@@ -123,8 +129,9 @@ dependencies:
       path: generated/dart
 ```
 
-The same staleness rule applies: the `dart-clients` check regenerates on every
-PR, fails if `generated/dart/` is stale, and then runs `dart analyze` over it.
+Same as Kotlin: the `codegen` job produces this. On a PR it only proves the
+generators still run cleanly and that `dart analyze` passes; on a push to `main`
+it commits the result.
 
 **Caveats worth knowing before you build on this:**
 
@@ -175,4 +182,4 @@ The version lives in the path (`/offers/v1`) and in `info.version`.
 ## See also
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — PR workflow and review expectations
-- [docs/github-pages-setup.md](docs/github-pages-setup.md) — one-time Pages setup
+- [docs/github-pages-setup.md](docs/github-pages-setup.md) — Pages and branch-protection setup

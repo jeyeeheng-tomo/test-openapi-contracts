@@ -30,68 +30,47 @@ jobs:
           name: bundled-specs
           path: dist/specs/
 
-  kotlin-models:
-    # The generated Kotlin is committed. Regenerate and fail if it is stale,
-    # so a contract PR always carries the model diff it causes.
+  codegen:
+    # Generated code is produced by CI, not by hand. On a push to main this job
+    # regenerates everything and commits the result back; on a PR it only proves
+    # the generators still run cleanly against the contract.
+    #
+    # Deliberately ONE job for both languages: two jobs pushing to main would
+    # race and one would lose to a non-fast-forward.
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: codegen-${{ github.ref }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Needed to push back; the default checkout is a detached SHA.
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
+      # Both generators are Java tools.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
+
+      # Pinned, not `stable`: `dart format` output can change between SDK
+      # releases, which would churn the committed diff on every bump.
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.11.5
 
       - name: Cache the Fabrikt jar
         uses: actions/cache@v4
         with:
           path: .fabrikt
           key: fabrikt-${{ hashFiles('codegen.json') }}
-
-      - run: npm ci
-      - run: npm run bundle
-      - run: npm run generate:kotlin
-
-      - name: Check the committed models are up to date
-        run: |
-          if ! git diff --quiet -- generated/; then
-            echo "::error::generated/ is out of date. Run 'npm run check' and commit the result."
-            echo ""
-            echo "Diff between the committed models and what the specs produce:"
-            git --no-pager diff --stat -- generated/
-            git --no-pager diff -- generated/
-            exit 1
-          fi
-          echo "Generated models match the specs."
-
-  dart-clients:
-    # Same contract as kotlin-models: the generated Dart is committed, so
-    # regenerate and fail if it drifts. Also check it still compiles.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      # Pinned, not `stable`: `dart format` output can change between SDK
-      # releases, which would make the staleness check below fail spuriously.
-      - uses: dart-lang/setup-dart@v1
-        with:
-          sdk: 3.11.5
-
-      # openapi-generator is a Java tool; build_runner needs the Dart SDK above.
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
 
       - name: Cache the OpenAPI Generator jar
         uses: actions/cache@v4
@@ -101,22 +80,31 @@ jobs:
 
       - run: npm ci
       - run: npm run bundle
-      - run: npm run generate:dart
-
-      - name: Check the committed clients are up to date
-        run: |
-          if ! git diff --quiet -- generated/dart/; then
-            echo "::error::generated/dart/ is out of date. Run 'npm run check' and commit the result."
-            echo ""
-            git --no-pager diff --stat -- generated/dart/
-            git --no-pager diff -- generated/dart/
-            exit 1
-          fi
-          echo "Generated Dart clients match the specs."
+      - run: npm run generate
 
       - name: Analyze the generated Dart
         working-directory: generated/dart
         run: dart analyze
+
+      - name: Commit the regenerated code
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- generated/
+          # --staged, not `git diff`: newly generated files are untracked, and a
+          # plain `git diff` is blind to those. That is what made the old
+          # staleness check pass against an empty generated/ tree.
+          if git diff --quiet --staged -- generated/; then
+            echo "Generated code already matches the specs."
+            exit 0
+          fi
+          git --no-pager diff --staged --stat -- generated/
+          git commit -m "Regenerate contract code [skip ci]"
+          # main may have moved while this job ran.
+          git pull --rebase --autostash origin "${{ github.ref_name }}"
+          git push origin HEAD:"${{ github.ref_name }}"
 
   breaking-changes:
     # Informational: flags backwards-incompatible changes vs. the base branch.
