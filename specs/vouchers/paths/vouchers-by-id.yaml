@@ -1,0 +1,18 @@
+# Path item for /vouchers/{voucherId}. See paths/vouchers.yaml for the $ref rules.
+parameters:
+  - $ref: '../components/parameters.yaml#/VoucherId'
+get:
+  operationId: getVoucher
+  summary: Get a voucher by id
+  tags: [Vouchers]
+  responses:
+    '200':
+      description: The voucher.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/Voucher.yaml'
+    '401':
+      $ref: '../../shared/components.yaml#/components/responses/Unauthorized'
+    '404':
+      $ref: '../../shared/components.yaml#/components/responses/NotFound'

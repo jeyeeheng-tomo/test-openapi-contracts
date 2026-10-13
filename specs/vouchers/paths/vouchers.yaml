@@ -1,0 +1,21 @@
+# Path item for /vouchers. Refs resolve relative to THIS file:
+#   ../components/...        vouchers-specific components
+#   ../../shared/components  components shared by every service
+get:
+  operationId: listVouchers
+  summary: List vouchers
+  tags: [Vouchers]
+  parameters:
+    - $ref: '../../shared/components.yaml#/components/parameters/PageSize'
+    - $ref: '../../shared/components.yaml#/components/parameters/PageToken'
+  responses:
+    '200':
+      description: A page of vouchers.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/VoucherPage.yaml'
+    '400':
+      $ref: '../../shared/components.yaml#/components/responses/BadRequest'
+    '401':
+      $ref: '../../shared/components.yaml#/components/responses/Unauthorized'
