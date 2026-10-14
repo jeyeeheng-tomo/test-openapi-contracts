@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "id": "018f3b2c-9b10-7c3a-9f2e-1a2b3c4d5e6f",
+      "title": "10% off your next coffee",
+      "description": "Valid at any participating outlet until 31 Dec. One redemption per member."
+    },
+    {
+      "id": "018f3b2c-9b10-7c3a-9f2e-2b3c4d5e6f70",
+      "title": "$5 off a $30 grocery run",
+      "description": "Minimum spend of $30 in a single transaction. Excludes tobacco and alcohol."
+    },
+    {
+      "id": "018f3b2c-9b10-7c3a-9f2e-3c4d5e6f7081",
+      "title": "Double points on weekend fuel",
+      "description": "Earn 2x points on all fuel purchases from Friday 6pm to Sunday midnight."
+    }
+  ],
+  "next_page_token": "eyJvZmZzZXQiOjN9"
+}

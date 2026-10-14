@@ -13,3 +13,5 @@ export 'package:api_contracts/offers/api/offers_api.dart';
 export 'package:api_contracts/offers/model/error.dart';
 export 'package:api_contracts/offers/model/offer.dart';
 export 'package:api_contracts/offers/model/offer_page.dart';
+
+export 'package:api_contracts/offers/fixtures.dart';

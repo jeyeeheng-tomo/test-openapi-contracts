@@ -1,0 +1,42 @@
+[
+  {
+    "route": "/vouchers",
+    "method": "GET",
+    "operationId": "listVouchers",
+    "status": "200",
+    "name": "Mixed",
+    "summary": "Active and already-expired vouchers on one page",
+    "type": "VoucherPage",
+    "file": "listVouchers.200.Mixed.json"
+  },
+  {
+    "route": "/vouchers",
+    "method": "GET",
+    "operationId": "listVouchers",
+    "status": "200",
+    "name": "Empty",
+    "summary": "No vouchers held — drives the empty state (no next_page_token)",
+    "type": "VoucherPage",
+    "file": "listVouchers.200.Empty.json"
+  },
+  {
+    "route": "/vouchers/{voucherId}",
+    "method": "GET",
+    "operationId": "getVoucher",
+    "status": "200",
+    "name": "Active",
+    "summary": "A voucher that is still redeemable",
+    "type": "Voucher",
+    "file": "getVoucher.200.Active.json"
+  },
+  {
+    "route": "/vouchers/{voucherId}",
+    "method": "GET",
+    "operationId": "getVoucher",
+    "status": "200",
+    "name": "Expired",
+    "summary": "A voucher past its expiry — still returned, not a 404",
+    "type": "Voucher",
+    "file": "getVoucher.200.Expired.json"
+  }
+]

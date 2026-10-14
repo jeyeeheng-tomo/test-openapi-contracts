@@ -13,3 +13,5 @@ export 'package:api_contracts/vouchers/api/vouchers_api.dart';
 export 'package:api_contracts/vouchers/model/error.dart';
 export 'package:api_contracts/vouchers/model/voucher.dart';
 export 'package:api_contracts/vouchers/model/voucher_page.dart';
+
+export 'package:api_contracts/vouchers/fixtures.dart';

@@ -1,0 +1,42 @@
+[
+  {
+    "route": "/offers",
+    "method": "GET",
+    "operationId": "listOffers",
+    "status": "200",
+    "name": "FirstPage",
+    "summary": "A full first page, with more to fetch",
+    "type": "OfferPage",
+    "file": "listOffers.200.FirstPage.json"
+  },
+  {
+    "route": "/offers",
+    "method": "GET",
+    "operationId": "listOffers",
+    "status": "200",
+    "name": "LastPage",
+    "summary": "The final page — next_page_token is absent, not null",
+    "type": "OfferPage",
+    "file": "listOffers.200.LastPage.json"
+  },
+  {
+    "route": "/offers",
+    "method": "GET",
+    "operationId": "listOffers",
+    "status": "200",
+    "name": "Empty",
+    "summary": "No offers available — drives the empty state (no next_page_token)",
+    "type": "OfferPage",
+    "file": "listOffers.200.Empty.json"
+  },
+  {
+    "route": "/offers/{offerId}",
+    "method": "GET",
+    "operationId": "getOffer",
+    "status": "200",
+    "name": "Coffee",
+    "summary": "A single offer",
+    "type": "Offer",
+    "file": "getOffer.200.Coffee.json"
+  }
+]
