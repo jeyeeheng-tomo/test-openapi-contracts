@@ -15,6 +15,13 @@ get:
         application/json:
           schema:
             $ref: '../components/schemas/OfferPage.yaml'
+          examples:
+            FirstPage:
+              $ref: '../examples/offer-page.yaml#/FirstPage'
+            LastPage:
+              $ref: '../examples/offer-page.yaml#/LastPage'
+            Empty:
+              $ref: '../examples/offer-page.yaml#/Empty'
     '400':
       $ref: '../../shared/components.yaml#/components/responses/BadRequest'
     '401':

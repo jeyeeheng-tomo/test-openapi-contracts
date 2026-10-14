@@ -12,6 +12,9 @@ get:
         application/json:
           schema:
             $ref: '../components/schemas/Offer.yaml'
+          examples:
+            Coffee:
+              $ref: '../examples/offer.yaml#/Coffee'
     '401':
       $ref: '../../shared/components.yaml#/components/responses/Unauthorized'
     '404':

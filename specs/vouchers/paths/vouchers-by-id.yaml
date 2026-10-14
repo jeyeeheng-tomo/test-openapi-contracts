@@ -12,6 +12,11 @@ get:
         application/json:
           schema:
             $ref: '../components/schemas/Voucher.yaml'
+          examples:
+            Active:
+              $ref: '../examples/voucher.yaml#/Active'
+            Expired:
+              $ref: '../examples/voucher.yaml#/Expired'
     '401':
       $ref: '../../shared/components.yaml#/components/responses/Unauthorized'
     '404':

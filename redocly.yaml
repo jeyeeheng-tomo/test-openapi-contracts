@@ -10,6 +10,10 @@ rules:
   operation-summary: error
   operation-4xx-response: error
   no-unresolved-refs: error
+  # Response examples are extracted into generated/fixtures/ and shipped to the
+  # frontend, so a drifted example is a broken fixture. Validate every one
+  # against its own schema.
+  no-invalid-media-type-examples: error
   security-defined: error
   tag-description: warn
   info-license: off

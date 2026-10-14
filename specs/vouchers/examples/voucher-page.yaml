@@ -1,0 +1,25 @@
+# Whole-payload examples for GET /vouchers. Expiry is the interesting axis here:
+# the contract says expired vouchers stay in the list, so the fixtures must
+# include one to exercise the client-side filtering.
+Mixed:
+  summary: Active and already-expired vouchers on one page
+  value:
+    data:
+      - id: 018f7a41-2c88-7e55-b3d1-9c4e5f6a7b8c
+        name: $5 off your next order
+        description: Redeemable once at any participating outlet on a minimum spend of $20.
+        expires_at: '2026-12-31T23:59:59Z'
+      - id: 018f7a41-2c88-7e55-b3d1-ad5f607b8c9d
+        name: Free regular coffee
+        description: Redeemable at any participating cafe. No minimum spend.
+        expires_at: '2026-10-20T23:59:59Z'
+      - id: 018f7a41-2c88-7e55-b3d1-be60718c9dae
+        name: $15 off groceries
+        description: Already expired — the server still returns it, so the client filters it out.
+        expires_at: '2026-09-30T23:59:59Z'
+    next_page_token: eyJvZmZzZXQiOjN9
+
+Empty:
+  summary: No vouchers held — drives the empty state (no next_page_token)
+  value:
+    data: []
