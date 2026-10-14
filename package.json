@@ -11,7 +11,8 @@
     "check": "npm run lint && npm run bundle && npm run generate",
     "generate:kotlin": "node scripts/generate-kotlin.mjs",
     "generate:dart": "node scripts/generate-dart.mjs",
-    "generate": "npm run generate:kotlin && npm run generate:dart"
+    "generate": "npm run generate:kotlin && npm run generate:dart && npm run generate:fixtures",
+    "generate:fixtures": "node scripts/generate-fixtures.mjs"
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.41.0",

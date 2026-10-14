@@ -7,6 +7,7 @@ committed here does not match what the specs produce.
 | Directory | Generator | Consumers |
 | --- | --- | --- |
 | `kotlin/` | [Fabrikt](https://github.com/cjbooms/fabrikt) | Backend — Jackson data classes, `jakarta.validation` |
+| `fixtures/` | `scripts/generate-fixtures.mjs` | Frontend — mock JSON payloads from the contract `examples:` |
 | `dart/` | [OpenAPI Generator](https://openapi-generator.tech/) (`dart-dio`) + `build_runner` | Frontend — Dio client + `json_serializable` models, one per service |
 
 The Dart side is a two-stage pipeline: openapi-generator emits classes annotated

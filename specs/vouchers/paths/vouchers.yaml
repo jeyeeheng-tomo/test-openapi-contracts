@@ -15,6 +15,11 @@ get:
         application/json:
           schema:
             $ref: '../components/schemas/VoucherPage.yaml'
+          examples:
+            Mixed:
+              $ref: '../examples/voucher-page.yaml#/Mixed'
+            Empty:
+              $ref: '../examples/voucher-page.yaml#/Empty'
     '400':
       $ref: '../../shared/components.yaml#/components/responses/BadRequest'
     '401':

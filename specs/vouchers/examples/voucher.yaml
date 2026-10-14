@@ -1,0 +1,16 @@
+# Whole-payload examples for GET /vouchers/{voucherId}.
+Active:
+  summary: A voucher that is still redeemable
+  value:
+    id: 018f7a41-2c88-7e55-b3d1-9c4e5f6a7b8c
+    name: $5 off your next order
+    description: Redeemable once at any participating outlet on a minimum spend of $20.
+    expires_at: '2026-12-31T23:59:59Z'
+
+Expired:
+  summary: A voucher past its expiry — still returned, not a 404
+  value:
+    id: 018f7a41-2c88-7e55-b3d1-be60718c9dae
+    name: $15 off groceries
+    description: Already expired. The server does not remove expired vouchers.
+    expires_at: '2026-09-30T23:59:59Z'

@@ -1,0 +1,30 @@
+# Whole-payload examples for GET /offers. These are extracted verbatim into
+# generated/fixtures/ for the frontend, so vary them deliberately: each entry
+# should drive a different UI state, not just prove the shape parses.
+FirstPage:
+  summary: A full first page, with more to fetch
+  value:
+    data:
+      - id: 018f3b2c-9b10-7c3a-9f2e-1a2b3c4d5e6f
+        title: 10% off your next coffee
+        description: Valid at any participating outlet until 31 Dec. One redemption per member.
+      - id: 018f3b2c-9b10-7c3a-9f2e-2b3c4d5e6f70
+        title: $5 off a $30 grocery run
+        description: Minimum spend of $30 in a single transaction. Excludes tobacco and alcohol.
+      - id: 018f3b2c-9b10-7c3a-9f2e-3c4d5e6f7081
+        title: Double points on weekend fuel
+        description: Earn 2x points on all fuel purchases from Friday 6pm to Sunday midnight.
+    next_page_token: eyJvZmZzZXQiOjN9
+
+LastPage:
+  summary: The final page — next_page_token is absent, not null
+  value:
+    data:
+      - id: 018f3b2c-9b10-7c3a-9f2e-4d5e6f708192
+        title: Free delivery on your next order
+        description: Applies to orders over $15. One use per member, expires at the end of the month.
+
+Empty:
+  summary: No offers available — drives the empty state (no next_page_token)
+  value:
+    data: []

@@ -19,9 +19,11 @@ specs/
     components/            # offers-specific schemas and parameters
 generated/kotlin/          # Fabrikt-generated Kotlin models (committed, DO NOT EDIT)
 generated/dart/            # OpenAPI Generator Dart clients (committed, DO NOT EDIT)
+generated/fixtures/        # mock JSON payloads extracted from the contract examples
 scripts/build-site.mjs     # bundles specs + generates the Swagger UI page
 scripts/generate-kotlin.mjs # runs Fabrikt over the bundled specs
 scripts/generate-dart.mjs   # runs openapi-generator + build_runner over the bundled specs
+scripts/generate-fixtures.mjs # extracts response examples into mock fixtures
 codegen.json               # generator versions + settings
 redocly.yaml               # lint rules
 ```
@@ -147,6 +149,65 @@ it commits the result.
 - Generator output is run through `dart format`, so the committed diff stays
   stable. The CI job pins an exact Dart SDK for the same reason — a formatter
   change between SDK releases would otherwise look like stale output.
+
+## Mock fixtures
+
+The frontend can build against mock payloads with no backend. They are **not
+invented by a generator** — they are the `examples:` you write in the contract,
+extracted verbatim:
+
+```
+specs/offers/examples/offer-page.yaml   # you write this
+        ↓  npm run generate:fixtures
+generated/fixtures/offers/listOffers.200.FirstPage.json   # raw JSON, for anyone
+generated/dart/lib/offers/fixtures.dart                   # typed, for Flutter
+```
+
+Write varied examples on purpose — one per UI state you need to build, not one
+that merely proves the shape parses:
+
+```yaml
+# specs/offers/examples/offer-page.yaml
+FirstPage:
+  summary: A full first page, with more to fetch
+  value:
+    data: [ { id: 018f…, title: 10% off your next coffee, description: … } ]
+    next_page_token: eyJvZmZzZXQiOjN9
+Empty:
+  summary: No offers available — drives the empty state
+  value:
+    data: []
+```
+
+then reference them from the response:
+
+```yaml
+content:
+  application/json:
+    schema: { $ref: '../components/schemas/OfferPage.yaml' }
+    examples:
+      FirstPage: { $ref: '../examples/offer-page.yaml#/FirstPage' }
+      Empty:     { $ref: '../examples/offer-page.yaml#/Empty' }
+```
+
+**Every example is validated against its own response schema** by the
+`no-invalid-media-type-examples` lint rule, so a fixture cannot drift from the
+contract without failing CI. They also render in the Swagger UI example picker.
+
+From Flutter, typed and already parsed — no asset registration needed, the
+payload is embedded in the package:
+
+```dart
+import 'package:api_contracts/offers.dart';
+
+final page = OffersFixtures.listOffers200FirstPage;   // OfferPage
+final empty = OffersFixtures.listOffers200Empty;      // OfferPage, data: []
+final raw  = OffersFixtures.listOffers200FirstPageJson; // String, if you want the JSON
+```
+
+`generated/fixtures/<service>/index.json` lists every fixture with its route,
+method, status and schema — enough for a mock server or test harness to serve
+them without globbing.
 
 ## Adding a service
 
